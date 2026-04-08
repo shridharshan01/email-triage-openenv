@@ -1,0 +1,1 @@
+from email_triage_openenv.server.app import app

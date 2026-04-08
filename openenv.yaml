@@ -1,0 +1,40 @@
+name: email_triage_openenv
+version: "1.0.0"
+description: "Email triage environment for training AI agents on real-world customer support tasks"
+
+# OpenEnv required fields
+api_version: "1.0.0"
+environment_class: "email_triage_openenv.server.environment.EmailTriageEnvironment"
+
+tasks:
+  - name: easy
+    description: "Classify email category and priority"
+    difficulty: easy
+    max_score: 1.0
+    grader: "email_triage_openenv.graders.grade_task_easy"
+
+  - name: medium
+    description: "Classify category, priority, and department"
+    difficulty: medium
+    max_score: 1.0
+    grader: "email_triage_openenv.graders.grade_task_medium"
+
+  - name: hard
+    description: "Full classification + escalation decision + reply draft"
+    difficulty: hard
+    max_score: 1.0
+    grader: "email_triage_openenv.graders.grade_task_hard"
+
+environment:
+  max_steps: 100
+  episode_timeout: 300
+  concurrent_sessions: true
+
+deployment:
+  space_sdk: docker
+  hardware: cpu-basic
+  env_vars:
+    - name: WORKERS
+      default: "4"
+    - name: MAX_CONCURRENT_ENVS
+      default: "100"

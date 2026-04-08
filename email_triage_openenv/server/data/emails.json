@@ -1,0 +1,44 @@
+{
+  "emails": [
+    {
+      "email_id": "e001",
+      "subject": "Refund issue",
+      "body": "I was charged extra on my last invoice. Please refund the difference immediately.",
+      "sender": "user@gmail.com",
+      "sender_name": "Alice Smith",
+      "timestamp": "2024-01-01T09:00:00Z"
+    },
+    {
+      "email_id": "e002",
+      "subject": "Login problem",
+      "body": "I cannot login to my account. It says my password is wrong but I just reset it.",
+      "sender": "user2@gmail.com",
+      "sender_name": "Bob Jones",
+      "timestamp": "2024-01-02T10:30:00Z"
+    },
+    {
+      "email_id": "e003",
+      "subject": "General question about pricing",
+      "body": "Hi, I'd like to know more about your enterprise pricing plans. Can you send me details?",
+      "sender": "prospect@company.com",
+      "sender_name": "Carol White",
+      "timestamp": "2024-01-03T11:00:00Z"
+    },
+    {
+      "email_id": "e004",
+      "subject": "URGENT: Service completely down",
+      "body": "Your service is completely broken for our entire team. We are losing revenue every minute. Fix this NOW.",
+      "sender": "cto@bigclient.com",
+      "sender_name": "Dave Brown",
+      "timestamp": "2024-01-04T08:00:00Z"
+    },
+    {
+      "email_id": "e005",
+      "subject": "Feature feedback",
+      "body": "I love the new dashboard feature! Just wanted to say the UX team did a great job.",
+      "sender": "fan@example.com",
+      "sender_name": "Eve Davis",
+      "timestamp": "2024-01-05T14:00:00Z"
+    }
+  ]
+}

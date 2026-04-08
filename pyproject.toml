@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "email-triage-openenv"
+version = "1.0.0"
+description = "OpenEnv-compliant real-world benchmark for AI email triage"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.0.0",
+    "openai>=1.0.0",
+    "httpx>=0.25.0",
+    "python-multipart>=0.0.6",
+    "python-dotenv>=1.0.0",
+    "openenv-core>=0.2.0",
+    "websockets>=12.0",
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.setuptools.packages.find]
+include = ["email_triage_openenv*", "server*"]
+exclude = ["tests*", "baseline*"]
+
+[tool.openenv]
+env_class = "email_triage_openenv.server.environment:EmailTriageEnvironment"
+action_cls = "email_triage_openenv.models:EmailAction"
+observation_cls = "email_triage_openenv.models:EmailObservation"
+state_cls = "email_triage_openenv.models:EmailState"

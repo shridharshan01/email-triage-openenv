@@ -1,0 +1,2 @@
+[console_scripts]
+email-triage-server = server.app:main

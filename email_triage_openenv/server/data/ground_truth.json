@@ -1,0 +1,34 @@
+{
+  "ground_truth": {
+    "e001": {
+      "category": "billing",
+      "priority": "high",
+      "department": "finance",
+      "needs_escalation": false
+    },
+    "e002": {
+      "category": "technical_support",
+      "priority": "urgent",
+      "department": "engineering",
+      "needs_escalation": false
+    },
+    "e003": {
+      "category": "general_inquiry",
+      "priority": "medium",
+      "department": "sales",
+      "needs_escalation": false
+    },
+    "e004": {
+      "category": "technical_support",
+      "priority": "urgent",
+      "department": "engineering",
+      "needs_escalation": true
+    },
+    "e005": {
+      "category": "feedback",
+      "priority": "low",
+      "department": "product",
+      "needs_escalation": false
+    }
+  }
+}
