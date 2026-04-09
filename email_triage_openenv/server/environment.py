@@ -14,6 +14,10 @@ VALID_CATEGORIES = ["billing", "technical_support", "general_inquiry", "complain
 VALID_PRIORITIES = ["low", "medium", "high", "urgent"]
 VALID_DEPARTMENTS = ["finance", "engineering", "sales", "product", "support"]
 
+# Constants for boundary avoidance
+MIN_SCORE = 0.001
+MAX_SCORE = 0.999
+
 
 class EmailTriageEnvironment(Environment):
     """OpenEnv-compliant email triage environment."""
@@ -54,14 +58,14 @@ class EmailTriageEnvironment(Environment):
         if self._current_index >= len(self.emails):
             obs = self._get_terminal_observation()
             obs.done = True
-            obs.reward = 0.001
+            obs.reward = MIN_SCORE
             return obs
 
         # Get current email and ground truth
         email = self.emails[self._current_index]
         gt = self.gt.get(email["email_id"], {})
 
-        # Score the action (returns score strictly between 0 and 1)
+        # Score the action
         score, breakdown = self._score_action(action, gt)
 
         # Update episode state
@@ -96,8 +100,8 @@ class EmailTriageEnvironment(Environment):
 
     def _score_action(self, action: EmailAction, gt: Dict) -> Tuple[float, Dict]:
         """
-        Score action normalized to (0, 1) - strictly between 0 and 1.
-        Returns score between 0.001 and 0.999
+        Score action normalized to (MIN_SCORE, MAX_SCORE) - strictly between 0 and 1.
+        Never returns 0.0 or 1.0.
         """
         score = 0.0
         breakdown = {}
@@ -109,14 +113,12 @@ class EmailTriageEnvironment(Environment):
         breakdown["category"] = {
             "got": action.category,
             "expected": gt.get("category", ""),
-            "correct": cat_correct,
-            "weight": 0.3
+            "correct": cat_correct
         }
         breakdown["priority"] = {
             "got": action.priority,
             "expected": gt.get("priority", ""),
-            "correct": pri_correct,
-            "weight": 0.3
+            "correct": pri_correct
         }
 
         score += (0.3 if cat_correct else 0)
@@ -128,8 +130,7 @@ class EmailTriageEnvironment(Environment):
             breakdown["department"] = {
                 "got": action.department,
                 "expected": gt.get("department", ""),
-                "correct": dept_correct,
-                "weight": 0.2
+                "correct": dept_correct
             }
             score += (0.2 if dept_correct else 0)
 
@@ -140,17 +141,13 @@ class EmailTriageEnvironment(Environment):
                 breakdown["needs_escalation"] = {
                     "got": action.needs_escalation,
                     "expected": gt.get("needs_escalation", False),
-                    "correct": esc_correct,
-                    "weight": 0.2
+                    "correct": esc_correct
                 }
                 score += (0.2 if esc_correct else 0)
 
             if action.reply_draft:
                 draft_quality = self._score_reply_draft(action.reply_draft, gt)
-                breakdown["reply_draft"] = {
-                    "quality": draft_quality,
-                    "weight": 0.2
-                }
+                breakdown["reply_draft"] = {"quality": draft_quality}
                 score += draft_quality * 0.2
 
         # Penalties
@@ -161,11 +158,14 @@ class EmailTriageEnvironment(Environment):
             score -= 0.1
             breakdown["invalid_priority"] = {"penalty": -0.1}
 
-        # Clamp score to (0, 1) - strictly between 0 and 1
+        # CRITICAL: Clamp score to (MIN_SCORE, MAX_SCORE) - never 0.0 or 1.0
         if score <= 0.0:
-            score = 0.001
+            score = MIN_SCORE
         elif score >= 1.0:
-            score = 0.999
+            score = MAX_SCORE
+
+        # Ensure score is never exactly 0.0 or 1.0
+        score = max(MIN_SCORE, min(MAX_SCORE, score))
 
         breakdown["total"] = score
 
@@ -174,37 +174,37 @@ class EmailTriageEnvironment(Environment):
     def _score_reply_draft(self, draft: str, gt: Dict) -> float:
         """
         Score reply draft quality.
-        Returns score strictly between 0.001 and 0.999
+        Returns score strictly between MIN_SCORE and MAX_SCORE.
         """
         if not draft:
-            return 0.001
+            return MIN_SCORE
 
-        score = 0.0
+        quality = 0.0
         professional_words = ["thank", "please", "apologize", "investigate", "resolve", "assist"]
         if any(word in draft.lower() for word in professional_words):
-            score += 0.3
+            quality += 0.3
 
         actionable = ["will", "can", "let me", "i'll", "we'll"]
         if any(word in draft.lower() for word in actionable):
-            score += 0.3
+            quality += 0.3
 
         words = len(draft.split())
         if 10 <= words <= 100:
-            score += 0.2
+            quality += 0.2
         elif words > 0:
-            score += 0.1
+            quality += 0.1
 
         if gt.get("needs_escalation", False):
             if any(word in draft.lower() for word in ["escalate", "manager", "supervisor"]):
-                score += 0.2
+                quality += 0.2
 
-        # Ensure score is strictly between 0 and 1
-        if score <= 0.0:
-            score = 0.001
-        elif score >= 1.0:
-            score = 0.999
+        # Ensure quality is strictly between 0 and 1
+        if quality <= 0.0:
+            quality = MIN_SCORE
+        elif quality >= 1.0:
+            quality = MAX_SCORE
 
-        return score
+        return max(MIN_SCORE, min(MAX_SCORE, quality))
 
     def _build_feedback(self, action: EmailAction, gt: Dict, breakdown: Dict) -> str:
         """Build human-readable feedback."""
@@ -257,11 +257,17 @@ class EmailTriageEnvironment(Environment):
 
     def _get_terminal_observation(self) -> EmailObservation:
         """Get terminal observation when episode ends."""
-        avg_score = self._total_score / self._step_count if self._step_count > 0 else 0.001
+        if self._step_count > 0:
+            avg_score = self._total_score / self._step_count
+        else:
+            avg_score = MIN_SCORE
+
+        # Ensure avg_score is strictly between 0 and 1
+        avg_score = max(MIN_SCORE, min(MAX_SCORE, avg_score))
 
         return EmailObservation(
             done=True,
-            reward=0.001,
+            reward=MIN_SCORE,
             email_id="DONE",
             subject="Episode Complete",
             body=f"Processed {self._step_count} emails.\nTotal score: {self._total_score:.3f}\nAverage score: {avg_score:.3f}",
@@ -290,7 +296,12 @@ class EmailTriageEnvironment(Environment):
     @property
     def state(self) -> EmailState:
         """Return current episode state."""
-        avg_score = self._total_score / self._step_count if self._step_count > 0 else 0.001
+        if self._step_count > 0:
+            avg_score = self._total_score / self._step_count
+        else:
+            avg_score = MIN_SCORE
+
+        avg_score = max(MIN_SCORE, min(MAX_SCORE, avg_score))
 
         return EmailState(
             episode_id=self._episode_id,
