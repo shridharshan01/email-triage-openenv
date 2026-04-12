@@ -10,19 +10,19 @@ tasks:
   - name: easy
     description: "Classify email category and priority"
     difficulty: easy
-    max_score: 1.0
+    max_score: 0.999
     grader: "email_triage_openenv.graders.grade_task_easy"
 
   - name: medium
     description: "Classify category, priority, and department"
     difficulty: medium
-    max_score: 1.0
+    max_score: 0.999
     grader: "email_triage_openenv.graders.grade_task_medium"
 
   - name: hard
     description: "Full classification + escalation decision + reply draft"
     difficulty: hard
-    max_score: 1.0
+    max_score: 0.999
     grader: "email_triage_openenv.graders.grade_task_hard"
 
 environment:
