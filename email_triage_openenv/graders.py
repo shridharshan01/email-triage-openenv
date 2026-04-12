@@ -5,70 +5,50 @@ Each returns a score strictly in (0, 1) — never 0.0 or 1.0.
 
 from typing import Dict, Any
 
-# Safe import — graders must still load even if models has issues
 try:
     from .models import EmailAction
 except ImportError:
     EmailAction = None
 
-# Constants for boundary avoidance
-MIN_SCORE = 0.001
-MAX_SCORE = 0.999
+MIN_SCORE = 0.01
+MAX_SCORE = 0.99
 
 
 def grade_task_easy(action, ground_truth: Dict[str, Any]) -> float:
-    """
-    Easy task: Classify category and priority only.
-    Returns score strictly between MIN_SCORE and MAX_SCORE.
-    """
     score = 0.0
 
     if action.category == ground_truth.get("category", ""):
-        score += 0.5
-
+        score += 0.499
     if action.priority == ground_truth.get("priority", ""):
-        score += 0.5
+        score += 0.499
 
     return max(MIN_SCORE, min(MAX_SCORE, score))
 
 
 def grade_task_medium(action, ground_truth: Dict[str, Any]) -> float:
-    """
-    Medium task: Category + priority + department.
-    Returns score strictly between MIN_SCORE and MAX_SCORE.
-    """
     score = 0.0
 
     if action.category == ground_truth.get("category", ""):
-        score += 0.4
-
+        score += 0.399
     if action.priority == ground_truth.get("priority", ""):
-        score += 0.3
-
+        score += 0.299
     if action.department == ground_truth.get("department", ""):
-        score += 0.3
+        score += 0.299
 
     return max(MIN_SCORE, min(MAX_SCORE, score))
 
 
 def grade_task_hard(action, ground_truth: Dict[str, Any]) -> float:
-    """
-    Hard task: Category + priority + department + escalation + reply quality.
-    Returns score strictly between MIN_SCORE and MAX_SCORE.
-    """
     score = 0.0
 
     if action.category == ground_truth.get("category", ""):
-        score += 0.25
-
+        score += 0.249
     if action.priority == ground_truth.get("priority", ""):
-        score += 0.2
-
+        score += 0.199
     if action.department == ground_truth.get("department", ""):
-        score += 0.2
-
+        score += 0.199
     if action.needs_escalation == ground_truth.get("needs_escalation", False):
-        score += 0.15
+        score += 0.149
 
     if action.reply_draft:
         draft_score = _score_reply_quality(action.reply_draft, ground_truth)
@@ -78,7 +58,6 @@ def grade_task_hard(action, ground_truth: Dict[str, Any]) -> float:
 
 
 def _score_reply_quality(draft: str, ground_truth: Dict[str, Any]) -> float:
-    """Score reply draft quality strictly between 0 and 1."""
     quality = 0.0
 
     professional = ["thank", "please", "apologize", "investigate", "resolve"]
