@@ -4,14 +4,19 @@ Each returns a score strictly in (0, 1) — never 0.0 or 1.0.
 """
 
 from typing import Dict, Any
-from .models import EmailAction
+
+# Safe import — graders must still load even if models has issues
+try:
+    from .models import EmailAction
+except ImportError:
+    EmailAction = None
 
 # Constants for boundary avoidance
 MIN_SCORE = 0.001
 MAX_SCORE = 0.999
 
 
-def grade_task_easy(action: EmailAction, ground_truth: Dict[str, Any]) -> float:
+def grade_task_easy(action, ground_truth: Dict[str, Any]) -> float:
     """
     Easy task: Classify category and priority only.
     Returns score strictly between MIN_SCORE and MAX_SCORE.
@@ -20,13 +25,14 @@ def grade_task_easy(action: EmailAction, ground_truth: Dict[str, Any]) -> float:
 
     if action.category == ground_truth.get("category", ""):
         score += 0.5
+
     if action.priority == ground_truth.get("priority", ""):
         score += 0.5
 
     return max(MIN_SCORE, min(MAX_SCORE, score))
 
 
-def grade_task_medium(action: EmailAction, ground_truth: Dict[str, Any]) -> float:
+def grade_task_medium(action, ground_truth: Dict[str, Any]) -> float:
     """
     Medium task: Category + priority + department.
     Returns score strictly between MIN_SCORE and MAX_SCORE.
@@ -35,15 +41,17 @@ def grade_task_medium(action: EmailAction, ground_truth: Dict[str, Any]) -> floa
 
     if action.category == ground_truth.get("category", ""):
         score += 0.4
+
     if action.priority == ground_truth.get("priority", ""):
         score += 0.3
+
     if action.department == ground_truth.get("department", ""):
         score += 0.3
 
     return max(MIN_SCORE, min(MAX_SCORE, score))
 
 
-def grade_task_hard(action: EmailAction, ground_truth: Dict[str, Any]) -> float:
+def grade_task_hard(action, ground_truth: Dict[str, Any]) -> float:
     """
     Hard task: Category + priority + department + escalation + reply quality.
     Returns score strictly between MIN_SCORE and MAX_SCORE.
@@ -52,10 +60,13 @@ def grade_task_hard(action: EmailAction, ground_truth: Dict[str, Any]) -> float:
 
     if action.category == ground_truth.get("category", ""):
         score += 0.25
+
     if action.priority == ground_truth.get("priority", ""):
         score += 0.2
+
     if action.department == ground_truth.get("department", ""):
         score += 0.2
+
     if action.needs_escalation == ground_truth.get("needs_escalation", False):
         score += 0.15
 
