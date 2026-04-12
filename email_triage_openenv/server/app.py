@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Direct import
 from email_triage_openenv.server.environment import EmailTriageEnvironment
-from email_triage_openenv.models import EmailAction
+from email_triage_openenv.models import EmailAction, EmailObservation
 
 
 # ========== Request Models ==========
@@ -60,7 +60,10 @@ async def root():
             "reset": "POST /reset or GET /reset?task_level=1",
             "step": "POST /step",
             "state": "GET /state",
-            "health": "GET /health"
+            "health": "GET /health",
+            "metadata": "GET /metadata",
+            "schema": "GET /schema",
+            "mcp": "POST /mcp",
         }
     }
 
@@ -68,6 +71,95 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/metadata")
+async def metadata():
+    """OpenEnv required: environment metadata."""
+    return {
+        "name": "email_triage",
+        "description": "Email triage environment for training AI agents on real-world customer support tasks",
+        "version": "1.0.0",
+        "tasks": [
+            {
+                "name": "easy",
+                "description": "Classify email category and priority",
+                "difficulty": "easy",
+                "max_score": 1.0,
+            },
+            {
+                "name": "medium",
+                "description": "Classify category, priority, and department",
+                "difficulty": "medium",
+                "max_score": 1.0,
+            },
+            {
+                "name": "hard",
+                "description": "Full classification + escalation decision + reply draft",
+                "difficulty": "hard",
+                "max_score": 1.0,
+            },
+        ],
+    }
+
+
+@app.get("/schema")
+async def schema():
+    """OpenEnv required: action, observation, and state schemas."""
+    return {
+        "action": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Email category"},
+                "priority": {"type": "string", "description": "Priority level"},
+                "department": {"type": "string", "description": "Routing department"},
+                "reply_draft": {"type": "string", "description": "Draft reply text"},
+                "needs_escalation": {"type": "boolean", "description": "Escalation flag"},
+                "is_duplicate": {"type": "boolean", "description": "Duplicate flag"},
+            }
+        },
+        "observation": {
+            "type": "object",
+            "properties": {
+                "email_id": {"type": "string"},
+                "subject": {"type": "string"},
+                "body": {"type": "string"},
+                "sender": {"type": "string"},
+                "sender_name": {"type": "string"},
+                "timestamp": {"type": "string"},
+                "task_level": {"type": "integer"},
+                "done": {"type": "boolean"},
+                "reward": {"type": "number"},
+                "feedback": {"type": "string"},
+            }
+        },
+        "state": {
+            "type": "object",
+            "properties": {
+                "episode_id": {"type": "string"},
+                "step_count": {"type": "integer"},
+                "task_level": {"type": "integer"},
+                "current_email_index": {"type": "integer"},
+                "total_emails": {"type": "integer"},
+                "total_score": {"type": "number"},
+                "average_score": {"type": "number"},
+                "task_completed": {"type": "boolean"},
+            }
+        }
+    }
+
+
+@app.post("/mcp")
+async def mcp(request: dict = None):
+    """OpenEnv required: MCP JSON-RPC endpoint."""
+    return {
+        "jsonrpc": "2.0",
+        "id": (request or {}).get("id", 1),
+        "result": {
+            "name": "email_triage",
+            "description": "Email triage OpenEnv environment",
+        }
+    }
 
 
 @app.post("/reset")
